@@ -1,27 +1,63 @@
 <template>
   <div class="container" >
-    <p>文本输入框</p>
+    <div class='emoji'>
+      <textarea class="text" rows="5" v-model="content" ></textarea>
+      <div class='addEmoji'>添加表情</div>
+      <div class='emojiDiv'>
+        <emotion @emotion="handleEmotion" :height="200" ></emotion>
+      </div>
+      <div><button @click="saveHandler">发布评论</button></div>
+    </div>
+
+    <div v-for='item in comments' :key="item.id">
+      <p v-html="item.content.replace(/\#[\u4E00-\u9FA5]{1,3}\;/gi, emotion)"></p>
+    </div>
+
+
+    <!-- <p>文本输入框</p>
     <textarea class="text" rows="5" v-model="content" ></textarea>
     <p>表情选择框</p>
     <emotion @emotion="handleEmotion" :height="200" ></emotion>
     <p>效果显示框</p>
     <div class="text-place">
-      <!-- /\#[\u4E00-\u9FA5]{1,3}\;/gi 匹配出含 #XXX; 的字段 -->
       <p v-html="content.replace(/\#[\u4E00-\u9FA5]{1,3}\;/gi, emotion)"></p>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script>
 import Emotion from '@/components/Emotion/index'
+import {post,get} from '@/http/axios'
 export default {
   data () {
     return {
-      content: '',
-      comment: '',
+      comment_form:{
+        orderId:1145,
+        cusId:134
+      },
+      content:'',
+      comments:[]
     }
   },
+  created(){
+    this.findComment()
+  },
   methods: {
+    // 查询评论
+    findComment(){
+      get('/comment/findCommentByCus?cusId=134').then((res)=>{
+        this.comments = res.data.list
+      })
+    },
+    // 保存评论
+    saveHandler(){
+      this.comment_form.content = this.content
+      post('/comment/saveOrUpdate',this.comment_form).then((res)=>{
+        // 更新数据
+        this.findComment()
+        this.content = ''
+      })
+    },
     handleEmotion (i) {
       this.content += i
     },
@@ -39,6 +75,28 @@ export default {
 }
 </script>
 <style scoped>
+  .emoji div{
+    display: inline-block
+  }
+  .emoji div:last-child{
+    float: right;
+  }
+  .emoji {
+    position: relative;
+  }
+  .container >>> .emojiDiv{
+    position:absolute;
+    left:0;
+    display: none;
+  }
+  .addEmoji:hover ~ .emojiDiv{
+    display:block;
+  }
+  .emojiDiv:hover{
+    display:block;
+  }
+
+
   .container {
     margin: 0 auto;
     margin-top: 20px;
